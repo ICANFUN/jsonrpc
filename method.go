@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-type MiddlewareFunc func(Context) (err *Error)
+type MiddlewareFunc func(*Context) (err *Error)
 type MiddlewareChain []MiddlewareFunc
 
 type (

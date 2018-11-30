@@ -26,7 +26,7 @@ func TestNext(t *testing.T) {
 	require.NotPanics(t, func() {
 		pick = c.IsNext()
 	})
-	require.Equal(t, false, pick)
+	require.Equal(t, true, pick)
 	c.Next()
 	require.NotPanics(t, func() {
 		pick = c.IsNext()

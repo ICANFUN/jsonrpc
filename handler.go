@@ -50,7 +50,7 @@ func (mr *MethodRepository) InvokeMeddleware(c Context, r *Request) *Response {
 	var res *Response
 
 	for _, middleware := range mr.Middlewares {
-		err := middleware(c)
+		err := middleware(&c)
 		if !c.IsNext() {
 			if err != nil {
 				res = NewResponse(r)

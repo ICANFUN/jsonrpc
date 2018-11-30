@@ -56,12 +56,13 @@ func ExampleEchoHandler_ServeJSONRPC() {
 
 	mr := NewMethodRepository()
 
-	mr.Use(func(context Context) (err *Error) {
+	mr.Use(func(context *Context) (err *Error) {
 		req := map[string]interface{}{}
 		if err := json.Unmarshal(context.Body(), &req); err != nil {
 			return ErrParse()
 		}
 		log.Printf("middleware %s", req)
+		context.Abort()
 		return nil
 	})
 
