@@ -1,8 +1,9 @@
 package jsonrpc
 
 import (
-	"github.com/intel-go/fastjson"
 	"net/http"
+
+	"github.com/intel-go/fastjson"
 )
 
 // Handler links a method of JSON-RPC request.
