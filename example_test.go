@@ -2,7 +2,7 @@ package jsonrpc
 
 import (
 	"bytes"
-	"context"
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -28,7 +28,7 @@ type (
 	}
 )
 
-func (h EchoHandler) ServeJSONRPC(c context.Context, params *fastjson.RawMessage) (interface{}, *Error) {
+func (h EchoHandler) ServeJSONRPC(c Context, params *fastjson.RawMessage) (interface{}, *Error) {
 
 	var p EchoParams
 	if err := Unmarshal(params, &p); err != nil {
@@ -40,7 +40,7 @@ func (h EchoHandler) ServeJSONRPC(c context.Context, params *fastjson.RawMessage
 	}, nil
 }
 
-func (h PositionalHandler) ServeJSONRPC(c context.Context, params *fastjson.RawMessage) (interface{}, *Error) {
+func (h PositionalHandler) ServeJSONRPC(c Context, params *fastjson.RawMessage) (interface{}, *Error) {
 
 	var p PositionalParams
 	if err := Unmarshal(params, &p); err != nil {
@@ -56,11 +56,20 @@ func ExampleEchoHandler_ServeJSONRPC() {
 
 	mr := NewMethodRepository()
 
-	if err := mr.RegisterMethod("Main.Echo", EchoHandler{}, EchoParams{}, EchoResult{}); err != nil {
+	mr.Use(func(context Context) (err *Error) {
+		req := map[string]interface{}{}
+		if err := json.Unmarshal(context.Body(), &req); err != nil {
+			return ErrParse()
+		}
+		log.Printf("middleware %s", req)
+		return nil
+	})
+
+	if err := mr.RegisterMethod("Main.Echo", EchoParams{}, EchoResult{}, EchoHandler{}); err != nil {
 		log.Fatalln(err)
 	}
 
-	if err := mr.RegisterMethod("Main.Positional", PositionalHandler{}, PositionalParams{}, PositionalResult{}); err != nil {
+	if err := mr.RegisterMethod("Main.Positional", PositionalParams{}, PositionalResult{}, PositionalHandler{}); err != nil {
 		log.Fatalln(err)
 	}
 

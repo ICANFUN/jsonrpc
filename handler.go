@@ -1,21 +1,21 @@
 package jsonrpc
 
 import (
-	"context"
-	"net/http"
-
 	"github.com/intel-go/fastjson"
+	"net/http"
 )
 
 // Handler links a method of JSON-RPC request.
 type Handler interface {
-	ServeJSONRPC(c context.Context, params *fastjson.RawMessage) (result interface{}, err *Error)
+	ServeJSONRPC(c Context, params *fastjson.RawMessage) (result interface{}, err *Error)
 }
+
+type HandlerChain []Handler
 
 // ServeHTTP provides basic JSON-RPC handling.
 func (mr *MethodRepository) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	rs, batch, err := ParseRequest(r)
+	rs, buf, batch, err := ParseRequest(r)
 	if err != nil {
 		err := SendResponse(w, []*Response{
 			{
@@ -30,8 +30,15 @@ func (mr *MethodRepository) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := make([]*Response, len(rs))
+	c := Context{r.Context(), buf}
+
 	for i := range rs {
-		resp[i] = mr.InvokeMethod(r.Context(), rs[i])
+		if res := mr.InvokeMeddleware(c, rs[i]); res != nil {
+			resp[i] = res
+			continue
+		}
+
+		resp[i] = mr.InvokeMethod(c, rs[i])
 	}
 
 	if err := SendResponse(w, resp, batch); err != nil {
@@ -39,17 +46,43 @@ func (mr *MethodRepository) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (mr *MethodRepository) InvokeMeddleware(c Context, r *Request) *Response {
+	var res *Response
+
+	for _, middleware := range mr.Middlewares {
+		err := middleware(c)
+		if !c.IsNext() {
+			if err != nil {
+				res = NewResponse(r)
+				res.Error = err
+				res.Result = nil
+			}
+			break
+		}
+	}
+
+	return res
+}
+
 // InvokeMethod invokes JSON-RPC method.
-func (mr *MethodRepository) InvokeMethod(c context.Context, r *Request) *Response {
-	var h Handler
+func (mr *MethodRepository) InvokeMethod(c Context, r *Request) *Response {
+	var hs HandlerChain
 	res := NewResponse(r)
-	h, res.Error = mr.TakeMethod(r)
+	hs, res.Error = mr.TakeMethod(r)
 	if res.Error != nil {
 		return res
 	}
-	res.Result, res.Error = h.ServeJSONRPC(WithRequestID(c, r.ID), r.Params)
-	if res.Error != nil {
-		res.Result = nil
+
+	for _, h := range hs {
+		res.Result, res.Error = h.ServeJSONRPC(WithRequestID(c, r.ID), r.Params)
+		if res.Error != nil {
+			res.Result = nil
+			break
+		}
+		if res.Result != nil {
+			break
+		}
 	}
+
 	return res
 }

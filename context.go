@@ -6,14 +6,45 @@ import (
 	"github.com/intel-go/fastjson"
 )
 
+const NEXT = "NEXT"
+
 type requestIDKey struct{}
 
-// RequestID takes request id from context.
-func RequestID(c context.Context) *fastjson.RawMessage {
-	return c.Value(requestIDKey{}).(*fastjson.RawMessage)
+type Context struct {
+	ctx  context.Context
+	body []byte
 }
 
 // WithRequestID adds request id to context.
-func WithRequestID(c context.Context, id *fastjson.RawMessage) context.Context {
-	return context.WithValue(c, requestIDKey{}, id)
+func WithRequestID(c Context, id *fastjson.RawMessage) Context {
+	return Context{context.WithValue(c.ctx, requestIDKey{}, id), c.body}
+}
+
+func (c *Context) Context() context.Context {
+	return c.ctx
+}
+
+func (c *Context) Body() []byte {
+	return c.body
+}
+
+// RequestID takes request id from context.
+func (c *Context) RequestID() *fastjson.RawMessage {
+	return c.ctx.Value(requestIDKey{}).(*fastjson.RawMessage)
+}
+
+func (c *Context) Next() {
+	c.ctx = context.WithValue(c.ctx, NEXT, true)
+}
+
+func (c *Context) Abort() {
+	c.ctx = context.WithValue(c.ctx, NEXT, false)
+}
+
+//default is true
+func (c *Context) IsNext() bool {
+	if c.ctx.Value(NEXT) == nil {
+		return true
+	}
+	return c.ctx.Value(NEXT).(bool)
 }

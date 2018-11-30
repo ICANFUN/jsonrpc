@@ -21,11 +21,11 @@ func TestDebugHandler(t *testing.T) {
 
 	require.Equal(t, http.StatusNotFound, rec.Code)
 
-	require.NoError(t, mr.RegisterMethod("Debug.Sample", SampleHandler(), struct {
+	require.NoError(t, mr.RegisterMethod("Debug.Sample", struct {
 		Name string `json:"name"`
 	}{}, struct {
 		Message string `json:"message,omitempty"`
-	}{}))
+	}{}, SampleHandler()))
 
 	rec = httptest.NewRecorder()
 	r, err = http.NewRequest("", "", nil)

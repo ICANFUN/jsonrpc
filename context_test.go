@@ -10,12 +10,31 @@ import (
 
 func TestRequestID(t *testing.T) {
 
-	c := context.Background()
+	c := Context{context.Background(), nil}
 	id := fastjson.RawMessage("1")
 	c = WithRequestID(c, &id)
 	var pick *fastjson.RawMessage
 	require.NotPanics(t, func() {
-		pick = RequestID(c)
+		pick = c.RequestID()
 	})
 	require.Equal(t, &id, pick)
+}
+
+func TestNext(t *testing.T) {
+	c := Context{context.Background(), nil}
+	var pick bool
+	require.NotPanics(t, func() {
+		pick = c.IsNext()
+	})
+	require.Equal(t, false, pick)
+	c.Next()
+	require.NotPanics(t, func() {
+		pick = c.IsNext()
+	})
+	require.Equal(t, true, pick)
+	c.Abort()
+	require.NotPanics(t, func() {
+		pick = c.IsNext()
+	})
+	require.Equal(t, false, pick)
 }

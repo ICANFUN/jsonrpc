@@ -36,17 +36,17 @@ type (
 )
 
 // ParseRequest parses a HTTP request to JSON-RPC request.
-func ParseRequest(r *http.Request) ([]*Request, bool, *Error) {
+func ParseRequest(r *http.Request) ([]*Request, []byte, bool, *Error) {
 
 	var rerr *Error
 
 	if !strings.HasPrefix(r.Header.Get(contentTypeKey), contentTypeValue) {
-		return nil, false, ErrInvalidRequest()
+		return nil, nil, false, ErrInvalidRequest()
 	}
 
 	buf := bytes.NewBuffer(make([]byte, 0, r.ContentLength))
 	if _, err := buf.ReadFrom(r.Body); err != nil {
-		return nil, false, ErrInvalidRequest()
+		return nil, nil, false, ErrInvalidRequest()
 	}
 	defer func(r *http.Request) {
 		err := r.Body.Close()
@@ -56,31 +56,31 @@ func ParseRequest(r *http.Request) ([]*Request, bool, *Error) {
 	}(r)
 
 	if buf.Len() == 0 {
-		return nil, false, ErrInvalidRequest()
+		return nil, nil, false, ErrInvalidRequest()
 	}
 
 	f, _, err := buf.ReadRune()
 	if err != nil {
-		return nil, false, ErrInvalidRequest()
+		return nil, nil, false, ErrInvalidRequest()
 	}
 	if err := buf.UnreadRune(); err != nil {
-		return nil, false, ErrInvalidRequest()
+		return nil, nil, false, ErrInvalidRequest()
 	}
-
+	body := buf.Bytes()
 	var rs []*Request
 	if f != batchRequestKey {
 		var req *Request
 		if err := fastjson.NewDecoder(buf).Decode(&req); err != nil {
-			return nil, false, ErrParse()
+			return nil, nil, false, ErrParse()
 		}
-		return append(rs, req), false, nil
+		return append(rs, req), body, false, nil
 	}
 
 	if err := fastjson.NewDecoder(buf).Decode(&rs); err != nil {
-		return nil, false, ErrParse()
+		return nil, body, false, ErrParse()
 	}
 
-	return rs, true, rerr
+	return rs, body, true, rerr
 }
 
 // NewResponse generates a JSON-RPC response.

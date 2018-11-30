@@ -16,12 +16,12 @@ func TestParseRequest(t *testing.T) {
 	r, rerr := http.NewRequest("", "", bytes.NewReader(nil))
 	require.NoError(t, rerr)
 
-	_, _, err := ParseRequest(r)
+	_, _, _, err := ParseRequest(r)
 	require.IsType(t, &Error{}, err)
 	assert.Equal(t, ErrorCodeInvalidRequest, err.Code)
 
 	r.Header.Set("Content-Type", "application/json")
-	_, _, err = ParseRequest(r)
+	_, _, _, err = ParseRequest(r)
 	require.IsType(t, &Error{}, err)
 	assert.Equal(t, ErrorCodeInvalidRequest, err.Code)
 
@@ -29,7 +29,7 @@ func TestParseRequest(t *testing.T) {
 	require.NoError(t, rerr)
 
 	r.Header.Set("Content-Type", "application/json")
-	_, _, err = ParseRequest(r)
+	_, _, _, err = ParseRequest(r)
 	require.IsType(t, &Error{}, err)
 	assert.Equal(t, ErrorCodeInvalidRequest, err.Code)
 
@@ -37,7 +37,7 @@ func TestParseRequest(t *testing.T) {
 	require.NoError(t, rerr)
 
 	r.Header.Set("Content-Type", "application/json")
-	_, _, err = ParseRequest(r)
+	_, _, _, err = ParseRequest(r)
 	require.IsType(t, &Error{}, err)
 	assert.Equal(t, ErrorCodeParse, err.Code)
 
@@ -45,7 +45,7 @@ func TestParseRequest(t *testing.T) {
 	require.NoError(t, rerr)
 
 	r.Header.Set("Content-Type", "application/json")
-	rs, batch, err := ParseRequest(r)
+	rs, _, batch, err := ParseRequest(r)
 	require.Nil(t, err)
 	require.NotEmpty(t, rs)
 	assert.False(t, batch)
@@ -54,7 +54,7 @@ func TestParseRequest(t *testing.T) {
 	require.NoError(t, rerr)
 
 	r.Header.Set("Content-Type", "application/json")
-	_, _, err = ParseRequest(r)
+	_, _, _, err = ParseRequest(r)
 	require.IsType(t, &Error{}, err)
 	assert.Equal(t, ErrorCodeParse, err.Code)
 
@@ -62,7 +62,7 @@ func TestParseRequest(t *testing.T) {
 	require.NoError(t, rerr)
 
 	r.Header.Set("Content-Type", "application/json")
-	_, _, err = ParseRequest(r)
+	_, _, _, err = ParseRequest(r)
 	require.IsType(t, &Error{}, err)
 	assert.Equal(t, ErrorCodeParse, err.Code)
 
@@ -70,7 +70,7 @@ func TestParseRequest(t *testing.T) {
 	require.NoError(t, rerr)
 
 	r.Header.Set("Content-Type", "application/json")
-	rs, batch, err = ParseRequest(r)
+	rs, _, batch, err = ParseRequest(r)
 	require.Nil(t, err)
 	require.NotEmpty(t, rs)
 	assert.True(t, batch)

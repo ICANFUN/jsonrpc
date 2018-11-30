@@ -9,7 +9,8 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/osamingo/jsonrpc/master/LICENSE)
 
 ## About
-
+- forked from [osamingo/jsonrpc](https://github.com/osamingo/jsonrpc)
+- Add Middleware
 - Simple, Poetic, Pithy.
 - No `reflect` package.
   - But `reflect` package is used only when invoke the debug handler.
@@ -21,7 +22,7 @@ Note: If you use Go 1.6, see [v1.0](https://github.com/osamingo/jsonrpc/releases
 ## Install
 
 ```
-$ go get -u github.com/osamingo/jsonrpc
+$ go get -u github.com/ICANFUN/jsonrpc
 ```
 
 ## Usage
@@ -82,11 +83,11 @@ func main() {
 
 	mr := jsonrpc.NewMethodRepository()
 
-	if err := mr.RegisterMethod("Main.Echo", EchoHandler{}, EchoParams{}, EchoResult{}); err != nil {
+	if err := mr.RegisterMethod("Main.Echo", EchoParams{}, EchoResult{},EchoHandler{}); err != nil {
 		log.Fatalln(err)
 	}
 
-	if err := mr.RegisterMethod("Main.Positional", PositionalHandler{}, PositionalParams{}, PositionalResult{}); err != nil {
+	if err := mr.RegisterMethod("Main.Positional", PositionalParams{}, PositionalResult{}, PositionalHandler{}); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -145,10 +146,20 @@ func NewUserService() *UserService {
 func main() {
 
 	mr := jsonrpc.NewMethodRepository()
-
+	
+    mr.Use(func(context jsonrpc.Context) (err *Error) {
+    	req := map[string]interface{}{}
+    	if err := json.Unmarshal(context.Body(), &req); err != nil {
+    		return ErrParse()
+    	}
+    	log.Printf("middleware %s", req)
+    	context.Next()
+    	return nil
+    })
+	
 	for _, s := range []Servicer{NewUserService()} {
 		for _, h := range s.Handlers() {
-			mr.RegisterMethod(s.MethodName(h), h, h.Params(), h.Result())
+			mr.RegisterMethod(s.MethodName(h), h.Params(), h.Result(),h)
 		}
 	}
 

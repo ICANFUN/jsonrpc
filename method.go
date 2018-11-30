@@ -5,15 +5,19 @@ import (
 	"sync"
 )
 
+type MiddlewareFunc func(Context) (err *Error)
+type MiddlewareChain []MiddlewareFunc
+
 type (
 	// A MethodRepository has JSON-RPC method functions.
 	MethodRepository struct {
-		m sync.RWMutex
-		r map[string]Metadata
+		m           sync.RWMutex
+		r           map[string]Metadata
+		Middlewares MiddlewareChain
 	}
 	// Metadata has method meta data.
 	Metadata struct {
-		Handler Handler
+		Handler HandlerChain
 		Params  interface{}
 		Result  interface{}
 	}
@@ -22,13 +26,14 @@ type (
 // NewMethodRepository returns new MethodRepository.
 func NewMethodRepository() *MethodRepository {
 	return &MethodRepository{
-		m: sync.RWMutex{},
-		r: map[string]Metadata{},
+		m:           sync.RWMutex{},
+		r:           map[string]Metadata{},
+		Middlewares: MiddlewareChain{},
 	}
 }
 
 // TakeMethod takes jsonrpc.Func in MethodRepository.
-func (mr *MethodRepository) TakeMethod(r *Request) (Handler, *Error) {
+func (mr *MethodRepository) TakeMethod(r *Request) (HandlerChain, *Error) {
 	if r.Method == "" || r.Version != Version {
 		return nil, ErrInvalidParams()
 	}
@@ -43,8 +48,12 @@ func (mr *MethodRepository) TakeMethod(r *Request) (Handler, *Error) {
 	return md.Handler, nil
 }
 
+func (mr *MethodRepository) Use(middleware ...MiddlewareFunc) {
+	mr.Middlewares = append(mr.Middlewares, middleware...)
+}
+
 // RegisterMethod registers jsonrpc.Func to MethodRepository.
-func (mr *MethodRepository) RegisterMethod(method string, h Handler, params, result interface{}) error {
+func (mr *MethodRepository) RegisterMethod(method string, params, result interface{}, h ...Handler) error {
 	if method == "" || h == nil {
 		return errors.New("jsonrpc: method name and function should not be empty")
 	}
