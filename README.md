@@ -22,7 +22,7 @@ Note: If you use Go 1.6, see [v1.0](https://github.com/osamingo/jsonrpc/releases
 ## Install
 
 ```
-$ go get -u github.com/ICANFUN/jsonrpc
+$ go get -u github.com/IcanFun/jsonrpc
 ```
 
 ## Usage
