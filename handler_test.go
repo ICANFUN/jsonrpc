@@ -12,10 +12,10 @@ import (
 )
 
 type handler struct {
-	F func(c Context, params *fastjson.RawMessage) (interface{}, *Error)
+	F func(c *Context, params *fastjson.RawMessage) (interface{}, *Error)
 }
 
-func (h *handler) ServeJSONRPC(c Context, params *fastjson.RawMessage) (interface{}, *Error) {
+func (h *handler) ServeJSONRPC(c *Context, params *fastjson.RawMessage) (interface{}, *Error) {
 	return h.F(c, params)
 }
 
@@ -46,12 +46,12 @@ func TestHandler(t *testing.T) {
 	assert.NotNil(t, res.Error)
 
 	h1 := &handler{}
-	h1.F = func(c Context, params *fastjson.RawMessage) (interface{}, *Error) {
+	h1.F = func(c *Context, params *fastjson.RawMessage) (interface{}, *Error) {
 		return "hello", nil
 	}
 	require.NoError(t, mr.RegisterMethod("hello", nil, nil, h1))
 	h2 := &handler{}
-	h2.F = func(c Context, params *fastjson.RawMessage) (interface{}, *Error) {
+	h2.F = func(c *Context, params *fastjson.RawMessage) (interface{}, *Error) {
 		return nil, ErrInternal()
 	}
 	require.NoError(t, mr.RegisterMethod("bye", nil, nil, h2))

@@ -21,6 +21,8 @@ type (
 		Message string `json:"message"`
 	}
 
+	MiddlewareHandler struct{}
+
 	PositionalHandler struct{}
 	PositionalParams  []int
 	PositionalResult  struct {
@@ -28,7 +30,7 @@ type (
 	}
 )
 
-func (h EchoHandler) ServeJSONRPC(c Context, params *fastjson.RawMessage) (interface{}, *Error) {
+func (h EchoHandler) ServeJSONRPC(c *Context, params *fastjson.RawMessage) (interface{}, *Error) {
 
 	var p EchoParams
 	if err := Unmarshal(params, &p); err != nil {
@@ -40,7 +42,18 @@ func (h EchoHandler) ServeJSONRPC(c Context, params *fastjson.RawMessage) (inter
 	}, nil
 }
 
-func (h PositionalHandler) ServeJSONRPC(c Context, params *fastjson.RawMessage) (interface{}, *Error) {
+func (h MiddlewareHandler) ServeJSONRPC(c *Context, params *fastjson.RawMessage) (interface{}, *Error) {
+
+	var p PositionalParams
+	if err := Unmarshal(params, &p); err != nil {
+		return nil, err
+	}
+	log.Printf("%+v", p)
+
+	return nil, nil
+}
+
+func (h PositionalHandler) ServeJSONRPC(c *Context, params *fastjson.RawMessage) (interface{}, *Error) {
 
 	var p PositionalParams
 	if err := Unmarshal(params, &p); err != nil {
@@ -70,7 +83,7 @@ func ExampleEchoHandler_ServeJSONRPC() {
 		log.Fatalln(err)
 	}
 
-	if err := mr.RegisterMethod("Main.Positional", PositionalParams{}, PositionalResult{}, PositionalHandler{}); err != nil {
+	if err := mr.RegisterMethod("Main.Positional", PositionalParams{}, PositionalResult{}, MiddlewareHandler{}, PositionalHandler{}); err != nil {
 		log.Fatalln(err)
 	}
 

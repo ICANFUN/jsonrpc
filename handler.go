@@ -7,7 +7,7 @@ import (
 
 // Handler links a method of JSON-RPC request.
 type Handler interface {
-	ServeJSONRPC(c Context, params *fastjson.RawMessage) (result interface{}, err *Error)
+	ServeJSONRPC(c *Context, params *fastjson.RawMessage) (result interface{}, err *Error)
 }
 
 type HandlerChain []Handler
@@ -74,12 +74,13 @@ func (mr *MethodRepository) InvokeMethod(c Context, r *Request) *Response {
 	}
 
 	for _, h := range hs {
-		res.Result, res.Error = h.ServeJSONRPC(WithRequestID(c, r.ID), r.Params)
+		ctx := WithRequestID(c, r.ID)
+		res.Result, res.Error = h.ServeJSONRPC(&ctx, r.Params)
 		if res.Error != nil {
 			res.Result = nil
 			break
 		}
-		if res.Result != nil {
+		if !ctx.IsNext() || res.Result != nil {
 			break
 		}
 	}
