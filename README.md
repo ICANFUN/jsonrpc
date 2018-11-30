@@ -9,7 +9,7 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/osamingo/jsonrpc/master/LICENSE)
 
 ## About
-- forked from [osamingo/jsonrpc](https://github.com/osamingo/jsonrpc)
+- Forked from [osamingo/jsonrpc](https://github.com/osamingo/jsonrpc)
 - Add Middleware
 - Simple, Poetic, Pithy.
 - No `reflect` package.
