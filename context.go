@@ -6,7 +6,7 @@ import (
 	"github.com/intel-go/fastjson"
 )
 
-const NEXT = "NEXT"
+type middlewareNextKey struct{}
 
 type requestIDKey struct{}
 
@@ -34,17 +34,17 @@ func (c *Context) RequestID() *fastjson.RawMessage {
 }
 
 func (c *Context) Next() {
-	c.ctx = context.WithValue(c.ctx, NEXT, true)
+	c.ctx = context.WithValue(c.ctx, middlewareNextKey{}, true)
 }
 
 func (c *Context) Abort() {
-	c.ctx = context.WithValue(c.ctx, NEXT, false)
+	c.ctx = context.WithValue(c.ctx, middlewareNextKey{}, false)
 }
 
 //default is true
 func (c *Context) IsNext() bool {
-	if c.ctx.Value(NEXT) == nil {
+	if c.ctx.Value(middlewareNextKey{}) == nil {
 		return true
 	}
-	return c.ctx.Value(NEXT).(bool)
+	return c.ctx.Value(middlewareNextKey{}).(bool)
 }
