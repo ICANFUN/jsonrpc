@@ -147,15 +147,15 @@ func main() {
 
 	mr := jsonrpc.NewMethodRepository()
 	
-    mr.Use(func(context jsonrpc.Context) (err *Error) {
-    	req := map[string]interface{}{}
-    	if err := json.Unmarshal(context.Body(), &req); err != nil {
-    		return ErrParse()
-    	}
-    	log.Printf("middleware %s", req)
-    	context.Next()
-    	return nil
-    })
+	mr.Use(func(context jsonrpc.Context) (err *Error) {
+		req := map[string]interface{}{}
+		if err := json.Unmarshal(context.Body(), &req); err != nil {
+			return ErrParse()
+		}
+		log.Printf("middleware %s", req)
+		context.Next()
+		return nil
+	})
 	
 	for _, s := range []Servicer{NewUserService()} {
 		for _, h := range s.Handlers() {
