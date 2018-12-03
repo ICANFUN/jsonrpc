@@ -5,7 +5,10 @@ import (
 	"sync"
 )
 
+//MiddlewareFunc ... middleware function
 type MiddlewareFunc func(*Context) (err *Error)
+
+//MiddlewareChain middleware function slice
 type MiddlewareChain []MiddlewareFunc
 
 type (
@@ -48,6 +51,7 @@ func (mr *MethodRepository) TakeMethod(r *Request) (HandlerChain, *Error) {
 	return md.Handler, nil
 }
 
+//Use registers middleware function
 func (mr *MethodRepository) Use(middleware ...MiddlewareFunc) {
 	mr.Middlewares = append(mr.Middlewares, middleware...)
 }

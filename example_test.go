@@ -83,7 +83,8 @@ func ExampleEchoHandler_ServeJSONRPC() {
 		log.Fatalln(err)
 	}
 
-	if err := mr.RegisterMethod("Main.Positional", PositionalParams{}, PositionalResult{}, MiddlewareHandler{}, PositionalHandler{}); err != nil {
+	if err := mr.RegisterMethod("Main.Positional", PositionalParams{}, PositionalResult{},
+		MiddlewareHandler{}, PositionalHandler{}); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -105,7 +106,7 @@ func ExampleEchoHandler_ServeJSONRPC() {
 		log.Fatalln(err)
 	}
 	defer resp.Body.Close()
-	if _, err := io.Copy(os.Stdout, resp.Body); err != nil {
+	if _, err = io.Copy(os.Stdout, resp.Body); err != nil {
 		log.Fatalln(err)
 	}
 

@@ -11,6 +11,7 @@ type Handler interface {
 	ServeJSONRPC(c *Context, params *fastjson.RawMessage) (result interface{}, err *Error)
 }
 
+//HandlerChain is Handler slice
 type HandlerChain []Handler
 
 // ServeHTTP provides basic JSON-RPC handling.
@@ -34,7 +35,7 @@ func (mr *MethodRepository) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c := Context{r.Context(), buf}
 
 	for i := range rs {
-		if res := mr.InvokeMeddleware(c, rs[i]); res != nil {
+		if res := mr.InvokeMiddleware(c, rs[i]); res != nil {
 			resp[i] = res
 			continue
 		}
@@ -47,7 +48,8 @@ func (mr *MethodRepository) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (mr *MethodRepository) InvokeMeddleware(c Context, r *Request) *Response {
+//InvokeMiddleware invokes middleware method
+func (mr *MethodRepository) InvokeMiddleware(c Context, r *Request) *Response {
 	var res *Response
 
 	for _, middleware := range mr.Middlewares {
